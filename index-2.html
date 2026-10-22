@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La question du jour</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Karla:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --nuit: #1C2240;
+    --papier: #F7F1E6;
+    --lampe: #F0B454;
+    --corail: #E07A6B;
+    --encre: #242033;
+    --brume: #AEB4D4;
+    --discret: #5B5670;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--nuit); }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--nuit);
+    color: var(--papier);
+    font-family: 'Karla', system-ui, sans-serif;
+    font-size: 1.05rem;
+    line-height: 1.5;
+  }
+  main {
+    max-width: 32rem;
+    margin: 0 auto;
+    padding: 2.5rem 1.25rem 4rem;
+  }
+  .date { color: var(--brume); margin: 0 0 .75rem; font-size: .95rem; }
+  h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(1.7rem, 6.2vw, 2.3rem);
+    line-height: 1.2;
+    margin: 0 0 1.75rem;
+  }
+  textarea {
+    width: 100%;
+    min-height: 9rem;
+    resize: vertical;
+    padding: 1rem;
+    border: 0;
+    border-radius: 14px;
+    background: var(--papier);
+    color: var(--encre);
+    font: inherit;
+    line-height: 1.5;
+  }
+  textarea::placeholder { color: var(--discret); }
+  button {
+    margin-top: 1rem;
+    padding: .85rem 1.5rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--lampe);
+    color: var(--encre);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:disabled { opacity: .55; cursor: default; }
+  textarea:focus-visible, button:focus-visible {
+    outline: 3px solid var(--lampe);
+    outline-offset: 3px;
+  }
+  .reponses { display: grid; gap: 1rem; }
+  .carte {
+    background: var(--papier);
+    color: var(--encre);
+    border-radius: 14px;
+    padding: 1rem 1.15rem 1.1rem;
+    border-left: 6px solid var(--lampe);
+  }
+  .carte.autre { border-left-color: var(--corail); }
+  .carte .nom { margin: 0 0 .35rem; font-weight: 600; font-size: .92rem; color: var(--discret); }
+  .carte .texte { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .scelle {
+    border: 2px dashed var(--brume);
+    border-radius: 14px;
+    padding: 1rem 1.15rem 1.1rem;
+    color: var(--brume);
+  }
+  .scelle .nom { margin: 0 0 .35rem; font-weight: 600; font-size: .92rem; }
+  .scelle .texte { margin: 0; }
+  .ouverture { transform-origin: top center; animation: ouvrir .8s ease-out both; }
+  @keyframes ouvrir {
+    from { opacity: 0; transform: perspective(600px) rotateX(-80deg); }
+    to   { opacity: 1; transform: perspective(600px) rotateX(0); }
+  }
+  .note { margin: 1.5rem 0 0; color: var(--brume); font-size: .95rem; }
+  .erreur { color: #FFC9C0; margin: 1rem 0 0; }
+  @media (prefers-reduced-motion: reduce) {
+    .ouverture { animation: none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <p class="date" id="date"></p>
+  <h1 id="question">&nbsp;</h1>
+  <div id="scene" aria-live="polite"></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+  // ====== À MODIFIER ======
+  const SUPABASE_URL = 'https://kkrzixbydtdgggerrqlu.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_l0J5vdikguoSeKwW7Sigog_uJQr7WR-';
+  // Jour de la première question (AAAA-MM-JJ). Chaque jour suivant passe à la question suivante.
+  const START_DATE = '2026-10-22';
+  const QUESTIONS = [
+    "Qu'est-ce que tu ferais en premier si on se retrouvait demain ?",
+    "À quel moment de la journée est-ce que tu penses le plus à moi ?",
+    "Où aimerais-tu qu'on aille ensemble, juste nous deux ?",
+    "Qu'est-ce que tu as envie de me raconter qui ne rentre pas dans un message ?",
+    "Quelle petite chose de nos soirées d'avant te manque le plus ?",
+    "Décris le premier câlin que tu veux pour nos retrouvailles.",
+    "Quel repas on cuisinerait ensemble ce soir si j'étais là ?",
+    "Qu'est-ce qui t'a fait sourire aujourd'hui, et à qui avais-tu envie de le dire ?",
+    "Qu'est-ce qui t'a le plus manqué de moi cette semaine ?",
+    "Si on avait une journée entière sans écran ni travail, qu'est-ce qu'on ferait ?",
+    "Quel geste ou quel regard aimerais-tu retrouver tout de suite ?",
+    "Qu'est-ce que tu voudrais qu'on ait prévu pour la prochaine fois qu'on se voit ?"
+  ];
+  // ========================
+
+  const INTERVALLE_MS = 15000;
+  const code = new URLSearchParams(location.search).get('k');
+  const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const scene = document.getElementById('scene');
+
+  const aujourdhui = new Date();
+  const jour = aujourdhui.toLocaleDateString('en-CA'); // AAAA-MM-JJ
+  const decalage = Math.round((Date.parse(jour) - Date.parse(START_DATE)) / 86400000);
+  const question = QUESTIONS[((decalage % QUESTIONS.length) + QUESTIONS.length) % QUESTIONS.length];
+
+  document.getElementById('date').textContent =
+    aujourdhui.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  document.getElementById('question').textContent = question;
+
+  let moi = null, autre = null, minuteur = null, etaitEnAttente = false;
+
+  function el(tag, classe, texte) {
+    const e = document.createElement(tag);
+    if (classe) e.className = classe;
+    if (texte !== undefined) e.textContent = texte;
+    return e;
+  }
+  function vider() { clearInterval(minuteur); minuteur = null; scene.replaceChildren(); }
+  function carte(classe, nom, texte) {
+    const c = el('div', classe);
+    c.append(el('p', 'nom', nom), el('p', 'texte', texte));
+    return c;
+  }
+  function message(texte, classe) { vider(); scene.append(el('p', classe || 'note', texte)); }
+
+  function afficherFormulaire() {
+    vider();
+    const zone = el('textarea');
+    zone.maxLength = 1000;
+    zone.placeholder = 'Ta réponse…';
+    zone.setAttribute('aria-label', 'Ta réponse');
+    const bouton = el('button', null, 'Envoyer ma réponse');
+    const erreur = el('p', 'erreur');
+    bouton.addEventListener('click', async () => {
+      const texte = zone.value.trim();
+      if (!texte) { zone.focus(); return; }
+      bouton.disabled = true;
+      erreur.textContent = '';
+      const { error } = await client.rpc('repondre', { p_code: code, p_jour: jour, p_texte: texte });
+      if (error) {
+        erreur.textContent = "L'envoi a échoué. Vérifie ta connexion et réessaie.";
+        bouton.disabled = false;
+        return;
+      }
+      charger();
+    });
+    scene.append(zone, bouton, erreur);
+  }
+
+  function afficherAttente(texte) {
+    vider();
+    etaitEnAttente = true;
+    const bloc = el('div', 'reponses');
+    bloc.append(
+      carte('carte', 'Ta réponse', texte),
+      (() => {
+        const s = el('div', 'scelle');
+        s.append(el('p', 'nom', 'Réponse de ' + autre),
+                 el('p', 'texte', 'Elle apparaîtra ici dès que ' + autre + ' aura répondu.'));
+        return s;
+      })()
+    );
+    scene.append(bloc);
+    minuteur = setInterval(charger, INTERVALLE_MS);
+  }
+
+  function afficherRevele(lignes) {
+    vider();
+    const mienne = lignes.find(l => l.prenom === moi);
+    const sienne = lignes.find(l => l.prenom !== moi);
+    const bloc = el('div', 'reponses');
+    bloc.append(carte('carte', 'Ta réponse', mienne.texte));
+    const c2 = carte('carte autre' + (etaitEnAttente ? ' ouverture' : ''), 'Réponse de ' + autre, sienne.texte);
+    bloc.append(c2);
+    scene.append(bloc, el('p', 'note', 'Une nouvelle question arrive demain.'));
+  }
+
+  async function charger() {
+    const { data, error } = await client.rpc('voir', { p_code: code, p_jour: jour });
+    if (error) { message("Impossible de charger les réponses pour l'instant. Réessaie dans un moment.", 'erreur'); return; }
+    const mienne = data.find(l => l.prenom === moi);
+    if (data.some(l => l.revele)) afficherRevele(data);
+    else if (mienne) afficherAttente(mienne.texte);
+    else afficherFormulaire();
+  }
+
+  async function demarrer() {
+    if (!code) { message("Ce lien est incomplet. Utilise le lien complet qui t'a été envoyé.", 'erreur'); return; }
+    const { data, error } = await client.rpc('qui_suis_je', { p_code: code });
+    if (error) { message("Connexion impossible pour l'instant. Réessaie dans un moment.", 'erreur'); return; }
+    if (!data || !data.length) { message("Ce lien ne fonctionne pas. Utilise le lien complet qui t'a été envoyé.", 'erreur'); return; }
+    moi = data[0].moi;
+    autre = data[0].autre;
+    charger();
+  }
+  demarrer();
+</script>
+</body>
+</html>
