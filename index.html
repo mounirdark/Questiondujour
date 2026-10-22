@@ -108,7 +108,7 @@
   <div id="scene" aria-live="polite"></div>
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   // ====== À MODIFIER ======
   const SUPABASE_URL = 'https://kkrzixbydtdgggerrqlu.supabase.co';
@@ -133,8 +133,28 @@
 
   const INTERVALLE_MS = 15000;
   const code = new URLSearchParams(location.search).get('k');
-  const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  let client = null;
+  let erreurConfig = null;
+  try {
+    if (!window.supabase) {
+      throw new Error("la bibliothèque Supabase n'a pas pu se charger (connexion, ou bloqueur de publicités).");
+    }
+    if (SUPABASE_URL.includes('TON-PROJET') || SUPABASE_ANON_KEY.includes('TA_CLE')) {
+      throw new Error("remplace SUPABASE_URL et SUPABASE_ANON_KEY en haut du script par les valeurs de ton projet Supabase.");
+    }
+    client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  } catch (e) {
+    erreurConfig = e.message;
+  }
   const scene = document.getElementById('scene');
+
+  // Affiche à l'écran toute erreur inattendue (utile sur téléphone, sans console).
+  window.addEventListener('error', (e) => {
+    const p = document.createElement('p');
+    p.className = 'erreur';
+    p.textContent = 'Erreur : ' + e.message;
+    scene.append(p);
+  });
 
   const aujourdhui = new Date();
   const jour = aujourdhui.toLocaleDateString('en-CA'); // AAAA-MM-JJ
@@ -223,6 +243,7 @@
   }
 
   async function demarrer() {
+    if (erreurConfig) { message('Configuration : ' + erreurConfig, 'erreur'); return; }
     if (!code) { message("Ce lien est incomplet. Utilise le lien complet qui t'a été envoyé.", 'erreur'); return; }
     const { data, error } = await client.rpc('qui_suis_je', { p_code: code });
     if (error) { message("Connexion impossible pour l'instant. Réessaie dans un moment.", 'erreur'); return; }
