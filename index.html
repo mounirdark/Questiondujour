@@ -242,6 +242,7 @@
   <p class="date" id="date"></p>
   <h1 id="question">&nbsp;</h1>
   <div id="scene" aria-live="polite"></div>
+
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -252,36 +253,36 @@
   // Jour de la première question (AAAA-MM-JJ). Chaque jour suivant passe à la question suivante.
   const START_DATE = '2026-10-22';
   const QUESTIONS = [
-    "Quel est le moment précis où tu as compris que c'était différent avec moi ?",
-    "Quelle partie de moi te manque le plus aujourd'hui : ma voix, mon rire, mon regard, autre chose ?",
-    "Décris nos retrouvailles idéales, de la porte qui s'ouvre jusqu'au premier mot.",
-    "Quel petit geste de ma part te fait le plus sentir que tu comptes pour moi ?",
-    "Quel souvenir de nous te revient le plus souvent en ce moment ?",
-    "Où nous imagines-tu dans cinq ans ?",
-    "Qu'est-ce que tu as remarqué chez moi la toute première fois, sans jamais me le dire ?",
-    "Qu'est-ce que tu aimerais que je comprenne mieux de toi ?",
-    "À quoi ressemble ta journée idéale avec moi, du réveil jusqu'au soir ?",
-    "Pour quoi as-tu envie de me dire merci aujourd'hui ?",
-    "Quelle chanson te fait penser à nous, et pourquoi ?",
-    "Qu'est-ce qui, chez moi, te fait fondre à chaque fois ?",
-    "Quel moment nous a le plus rapprochés, selon toi ?",
-    "Quel voyage ou quelle aventure rêves-tu de vivre avec moi ?",
-    "Quel fou rire avec moi te revient en premier ?",
-    "De quoi as-tu peur dans notre histoire, sans en avoir vraiment parlé ?",
-    "Quel geste tendre voudrais-tu recevoir de moi dès qu'on se voit ?",
-    "Qu'est-ce que je t'ai apporté que tu n'avais pas avant moi ?",
-    "Quelle petite chose minuscule te fait penser à moi dans ta journée ?",
-    "Quelle soirée aimerais-tu qu'on passe, rien que nous deux, sans téléphone ?",
-    "Qu'est-ce que tu admires le plus chez moi ?",
-    "Si tu pouvais m'envoyer un seul message vocal ce soir, que dirait-il ?",
-    "Quelle petite habitude à nous deux aimerais-tu créer ?",
-    "Quel moment difficile avons-nous traversé, et qu'est-ce que ça a changé entre nous ?",
-    "Quel moment avec moi aimerais-tu revivre comme si c'était la première fois ?",
-    "Qu'est-ce que tu n'oses pas toujours me demander mais que tu aimerais ?",
-    "Qu'est-ce que tu as appris sur l'amour grâce à nous ?",
-    "Qu'est-ce qui te manque de moi, au-delà de ma présence ?",
-    "Qu'est-ce que tu voudrais que je te promette ?",
-    "Termine cette phrase : « Ce que j'aime le plus dans notre histoire, c'est… »"
+    "Imagine le rendez-vous idéal à deux. Où sommes-nous, quelle heure est-il, et qu'est-ce qui le rend inoubliable ?",
+    "Raconte un moment de ta vie qui a changé ta façon de voir les choses. Que s'est-il passé, et qu'en as-tu gardé ?",
+    "Une journée ensemble en dépensant presque rien : à quoi ressemblerait-elle pour que tu t'en souviennes longtemps ?",
+    "Pour toi, qu'est-ce que l'amour ? À quoi reconnais-tu qu'il est là ?",
+    "Une soirée à la maison, rien que nous deux. Qu'est-ce qu'on cuisine, qu'est-ce qu'on écoute, et comment se termine-t-elle ?",
+    "De quoi as-tu besoin pour te sentir en sécurité dans une relation ? D'où te vient ce besoin ?",
+    "Si je te préparais une surprise, qu'est-ce qui la rendrait parfaite pour toi ? Et qu'est-ce qui la gâcherait ?",
+    "Quelle peur te retient le plus aujourd'hui ? Que ferais-tu si elle disparaissait demain ?",
+    "Dans quel endroit as-tu envie de m'emmener, et qu'espères-tu que j'y comprenne de toi ?",
+    "Qui a le plus influencé ta façon d'aimer ? Qu'est-ce que cette personne t'a appris, en bien comme en moins bien ?",
+    "Quelle activité aimerais-tu essayer avec moi, même si on est nuls tous les deux au début ? Imagine la scène.",
+    "Quel rêve te suit depuis longtemps ? Qu'est-ce qui t'empêche encore de le vivre ?",
+    "Il pleut dehors et nous n'avons rien de prévu. Décris-moi la soirée parfaite.",
+    "Comment aimes-tu qu'on te dise les choses difficiles ? Où places-tu la frontière entre honnêteté et blessure ?",
+    "Le bord de mer, la montagne ou une ville inconnue : lequel te fait le plus rêver pour un rendez-vous à deux, et pourquoi ?",
+    "Quelle réussite compte le plus pour toi, même si personne ne la voit ? Pourquoi celle-là ?",
+    "Quel petit rituel aimerais-tu inventer avec moi : une balade, un café, une playlist, une lettre ? Pourquoi celui-là ?",
+    "Qu'est-ce que tu te reproches encore ? Que te faudrait-il pour réussir à te le pardonner ?",
+    "Compose la playlist de notre prochain rendez-vous : cinq chansons, et ce que chacune raconte de ce moment.",
+    "Dans une mauvaise période, de quoi as-tu besoin : de présence, de silence, de solutions ? Comment aimerais-tu que je sois là ?",
+    "Quel est le rendez-vous le plus romantique que tu aies vécu ou imaginé ? Qu'est-ce qui l'a rendu si particulier ?",
+    "Décris un dimanche ordinaire dans ta vie idéale, dans dix ans.",
+    "Après une journée difficile, quel rendez-vous te ferait le plus de bien ? Dis-moi aussi ce que je pourrais faire ou dire.",
+    "Qu'est-ce qui fonctionne le mieux entre nous ? Qu'aimerais-tu qu'on apprenne à mieux faire ensemble ?",
+    "Quand on se verra, quel moment de la journée aimerais-tu garder rien que pour nous ? Que ferait-on ?",
+    "Quelle différence entre nous t'intrigue, te surprend ou te plaît ? Pourquoi ?",
+    "Raconte-moi nos retrouvailles telles que tu les imagines, de la porte qui s'ouvre jusqu'à la fin de la soirée.",
+    "Que signifie pour toi prendre soin de quelqu'un ? Donne-moi des gestes précis.",
+    "Une journée entière, sans contrainte, où tu veux : où va-t-on, et comment se déroule-t-elle ?",
+    "À quel rythme aimes-tu avancer dans une relation ? Qu'est-ce qui te met mal à l'aise quand ça va trop vite, ou trop lentement ?"
   ];
   // ========================
 
