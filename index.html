@@ -9,30 +9,59 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Karla:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --nuit: #1C2240;
-    --papier: #F7F1E6;
-    --lampe: #F0B454;
-    --corail: #E07A6B;
-    --encre: #242033;
-    --brume: #AEB4D4;
-    --discret: #5B5670;
+    --cacao: #3A2519;
+    --caramel: #C98E5B;
+    --creme: #F7ECDC;
+    --or: #D8A94A;
+    --rose: #E8A3AE;
+    --lilas: #BBA8E6;
+    --brume: #DCC3A8;
+    --discret: #7A5A47;
   }
   * { box-sizing: border-box; }
-  html { background: var(--nuit); }
+  html { background: var(--cacao); }
   body {
     margin: 0;
     min-height: 100vh;
-    background: var(--nuit);
-    color: var(--papier);
+    color: var(--creme);
     font-family: 'Karla', system-ui, sans-serif;
     font-size: 1.05rem;
     line-height: 1.5;
   }
+
+  /* Fond : des tickets illustrés (teckel, bijoux, cœurs) */
+  .fond {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    opacity: .17;
+  }
+
   main {
     max-width: 32rem;
     margin: 0 auto;
-    padding: 2.5rem 1.25rem 4rem;
+    padding: 1.5rem 1.25rem 4rem;
   }
+
+  /* Porte-clés teckel, accroché au-dessus de la question */
+  .porte-cles {
+    display: block;
+    width: 150px;
+    height: auto;
+    margin: 0 0 .5rem;
+    transform-origin: 50% 8%;
+    animation: balancer 2.6s ease-out 1 both;
+  }
+  @keyframes balancer {
+    0%   { transform: rotate(12deg); }
+    25%  { transform: rotate(-8deg); }
+    50%  { transform: rotate(5deg); }
+    75%  { transform: rotate(-2deg); }
+    100% { transform: rotate(0); }
+  }
+
   .date { color: var(--brume); margin: 0 0 .75rem; font-size: .95rem; }
   h1 {
     font-family: 'Fraunces', Georgia, serif;
@@ -48,8 +77,8 @@
     padding: 1rem;
     border: 0;
     border-radius: 14px;
-    background: var(--papier);
-    color: var(--encre);
+    background: var(--creme);
+    color: var(--cacao);
     font: inherit;
     line-height: 1.5;
   }
@@ -59,36 +88,55 @@
     padding: .85rem 1.5rem;
     border: 0;
     border-radius: 999px;
-    background: var(--lampe);
-    color: var(--encre);
+    background: var(--or);
+    color: var(--cacao);
     font: inherit;
     font-weight: 600;
     cursor: pointer;
   }
   button:disabled { opacity: .55; cursor: default; }
   textarea:focus-visible, button:focus-visible {
-    outline: 3px solid var(--lampe);
+    outline: 3px solid var(--or);
     outline-offset: 3px;
   }
-  .reponses { display: grid; gap: 1rem; }
+
+  .reponses { display: grid; gap: 1.1rem; }
+
+  /* Les réponses sont des tickets : encoches sur les côtés */
   .carte {
-    background: var(--papier);
-    color: var(--encre);
-    border-radius: 14px;
-    padding: 1rem 1.15rem 1.1rem;
-    border-left: 6px solid var(--lampe);
+    --r: 11px;
+    background: var(--creme);
+    color: var(--cacao);
+    border-radius: 10px;
+    padding: 1.05rem 1.7rem 1.2rem;
+    -webkit-mask:
+      radial-gradient(circle var(--r) at 0 50%, #0000 97%, #000) left / 51% 100% no-repeat,
+      radial-gradient(circle var(--r) at 100% 50%, #0000 97%, #000) right / 51% 100% no-repeat;
+    mask:
+      radial-gradient(circle var(--r) at 0 50%, #0000 97%, #000) left / 51% 100% no-repeat,
+      radial-gradient(circle var(--r) at 100% 50%, #0000 97%, #000) right / 51% 100% no-repeat;
   }
-  .carte.autre { border-left-color: var(--corail); }
-  .carte .nom { margin: 0 0 .35rem; font-weight: 600; font-size: .92rem; color: var(--discret); }
+  .carte.autre { background: #F6D6D9; }
+  .carte .nom {
+    margin: 0 0 .45rem;
+    padding-bottom: .45rem;
+    border-bottom: 2px dotted rgba(58, 37, 25, .35);
+    font-weight: 600;
+    font-size: .92rem;
+    color: var(--discret);
+  }
+  .carte .nom::before { content: "\2665\00a0"; color: #C9556A; }
   .carte .texte { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+
   .scelle {
-    border: 2px dashed var(--brume);
-    border-radius: 14px;
-    padding: 1rem 1.15rem 1.1rem;
+    border: 2px dashed var(--caramel);
+    border-radius: 10px;
+    padding: 1rem 1.7rem 1.1rem;
     color: var(--brume);
   }
   .scelle .nom { margin: 0 0 .35rem; font-weight: 600; font-size: .92rem; }
   .scelle .texte { margin: 0; }
+
   .ouverture { transform-origin: top center; animation: ouvrir .8s ease-out both; }
   @keyframes ouvrir {
     from { opacity: 0; transform: perspective(600px) rotateX(-80deg); }
@@ -97,12 +145,100 @@
   .note { margin: 1.5rem 0 0; color: var(--brume); font-size: .95rem; }
   .erreur { color: #FFC9C0; margin: 1rem 0 0; }
   @media (prefers-reduced-motion: reduce) {
-    .ouverture { animation: none; }
+    .ouverture, .porte-cles { animation: none; }
   }
 </style>
 </head>
 <body>
+
+<!-- Dessins réutilisables -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <!-- Ticket avec encoches et pointillés -->
+    <symbol id="ticket" viewBox="0 0 150 84">
+      <path d="M6 0H144Q150 0 150 6V34A8 8 0 0 0 150 50V78Q150 84 144 84H6Q0 84 0 78V50A8 8 0 0 0 0 34V6Q0 0 6 0Z" fill="var(--tk)"/>
+      <path d="M108 8V76" stroke="#3A2519" stroke-opacity=".45" stroke-width="1.6" stroke-dasharray="3 4" fill="none"/>
+      <use href="#coeur" x="116" y="30" width="24" height="24" style="fill:#3A2519;fill-opacity:.45"/>
+    </symbol>
+
+    <symbol id="coeur" viewBox="0 0 24 24">
+      <path d="M12 21s-8.5-5.4-8.5-11.5A4.7 4.7 0 0 1 12 6.8a4.7 4.7 0 0 1 8.5 2.7C20.5 15.6 12 21 12 21z"/>
+    </symbol>
+
+    <!-- Teckel de profil, une fleur dans la gueule -->
+    <symbol id="teckel" viewBox="0 0 120 56">
+      <path d="M98 22Q110 14 112 5" fill="none" stroke="var(--corps,#2B1A12)" stroke-width="5" stroke-linecap="round"/>
+      <g stroke="var(--contour,#D8A94A)" stroke-width="1.5" stroke-linejoin="round">
+        <rect x="29" y="30" width="9" height="22" rx="4.5" fill="var(--pattes,#9A5428)"/>
+        <rect x="41" y="30" width="9" height="22" rx="4.5" fill="var(--pattes,#9A5428)"/>
+        <rect x="78" y="30" width="9" height="22" rx="4.5" fill="var(--pattes,#9A5428)"/>
+        <rect x="90" y="30" width="9" height="22" rx="4.5" fill="var(--pattes,#9A5428)"/>
+        <rect x="20" y="14" width="84" height="27" rx="13.5" fill="var(--corps,#2B1A12)"/>
+        <ellipse cx="22" cy="25" rx="14" ry="12.5" fill="var(--corps,#2B1A12)"/>
+        <ellipse cx="9" cy="32" rx="9" ry="6.5" fill="var(--pattes,#9A5428)"/>
+        <path d="M27 15Q41 19 37 40Q23 41 24 24Z" fill="var(--oreille,#4A2E20)"/>
+      </g>
+      <circle cx="2.5" cy="30" r="2.7" fill="#1A0F0A"/>
+      <path d="M15 23Q18.5 19.5 22 23" fill="none" stroke="#1A0F0A" stroke-width="1.8" stroke-linecap="round"/>
+      <g transform="translate(5 38)">
+        <circle cx="0" cy="-3.2" r="2.6" fill="#F2B6C2"/><circle cx="3" cy="-1" r="2.6" fill="#F2B6C2"/>
+        <circle cx="1.8" cy="2.6" r="2.6" fill="#F2B6C2"/><circle cx="-1.8" cy="2.6" r="2.6" fill="#F2B6C2"/>
+        <circle cx="-3" cy="-1" r="2.6" fill="#F2B6C2"/><circle cx="0" cy="0" r="1.7" fill="#F4C84A"/>
+      </g>
+    </symbol>
+
+    <symbol id="bague" viewBox="0 0 64 64">
+      <circle cx="32" cy="42" r="14" fill="none" stroke="#D8A94A" stroke-width="5"/>
+      <path d="M25 21L28.5 11H35.5L39 21L32 28Z" fill="#F7ECDC" stroke="#B98A2E" stroke-width="2" stroke-linejoin="round"/>
+    </symbol>
+
+    <symbol id="boucle" viewBox="0 0 64 64">
+      <circle cx="32" cy="9" r="4.5" fill="none" stroke="#D8A94A" stroke-width="3"/>
+      <path d="M32 14V24" stroke="#D8A94A" stroke-width="3"/>
+      <path d="M32 24C21 35 23 54 32 57C41 54 43 35 32 24Z" fill="#F7ECDC" stroke="#D8A94A" stroke-width="3" stroke-linejoin="round"/>
+    </symbol>
+
+    <symbol id="collier" viewBox="0 0 64 64">
+      <path d="M6 8Q32 52 58 8" fill="none" stroke="#D8A94A" stroke-width="3" stroke-dasharray="1 4.5" stroke-linecap="round"/>
+      <use href="#coeur" x="20" y="32" width="24" height="24" style="fill:#C9556A;stroke:#D8A94A;stroke-width:1.6"/>
+    </symbol>
+
+    <!-- Motif de fond -->
+    <pattern id="motif" width="460" height="380" patternUnits="userSpaceOnUse">
+      <g transform="translate(24 28) rotate(-8)">
+        <use href="#ticket" width="150" height="84" style="--tk:#C98E5B"/>
+        <use href="#teckel" x="12" y="20" width="88" height="41" style="--corps:#2B1A12;--pattes:#8A4B25;--oreille:#4A2E20;--contour:#FFF1C9"/>
+      </g>
+      <g transform="translate(262 40) rotate(7)">
+        <use href="#ticket" width="150" height="84" style="--tk:#F7ECDC"/>
+        <use href="#bague" x="22" y="10" width="64" height="64"/>
+      </g>
+      <g transform="translate(36 212) rotate(5)">
+        <use href="#ticket" width="150" height="84" style="--tk:#E8A3AE"/>
+        <use href="#boucle" x="22" y="10" width="64" height="64"/>
+      </g>
+      <g transform="translate(254 226) rotate(-6)">
+        <use href="#ticket" width="150" height="84" style="--tk:#BBA8E6"/>
+        <use href="#collier" x="22" y="10" width="64" height="64"/>
+      </g>
+      <use href="#coeur" x="214" y="150" width="20" height="20" style="fill:#E8A3AE" transform="rotate(-14 224 160)"/>
+      <use href="#coeur" x="420" y="150" width="16" height="16" style="fill:#C9556A"/>
+      <use href="#coeur" x="150" y="340" width="18" height="18" style="fill:#E8A3AE" transform="rotate(12 159 349)"/>
+      <use href="#coeur" x="10" y="150" width="14" height="14" style="fill:#C98E5B"/>
+      <use href="#coeur" x="410" y="345" width="22" height="22" style="fill:#E8A3AE" transform="rotate(-10 421 356)"/>
+    </pattern>
+  </defs>
+</svg>
+
+<svg class="fond" aria-hidden="true" focusable="false"><rect width="100%" height="100%" fill="url(#motif)"/></svg>
+
 <main>
+  <!-- Porte-clés teckel (clin d'œil à la photo de référence) -->
+  <svg class="porte-cles" viewBox="0 0 130 118" aria-hidden="true" focusable="false">
+    <circle cx="65" cy="22" r="19" fill="none" stroke="#D8A94A" stroke-width="4.5"/>
+    <path d="M65 42V54" stroke="#D8A94A" stroke-width="4" stroke-linecap="round"/>
+    <use href="#teckel" x="4" y="56" width="122" height="57" style="--corps:#2B1A12;--pattes:#D9723A;--oreille:#3A2519;--contour:#D8A94A"/>
+  </svg>
   <p class="date" id="date"></p>
   <h1 id="question">&nbsp;</h1>
   <div id="scene" aria-live="polite"></div>
@@ -116,18 +252,36 @@
   // Jour de la première question (AAAA-MM-JJ). Chaque jour suivant passe à la question suivante.
   const START_DATE = '2026-10-22';
   const QUESTIONS = [
-    "Qu'est-ce que tu ferais en premier si on se retrouvait demain ?",
-    "À quel moment de la journée est-ce que tu penses le plus à moi ?",
-    "Où aimerais-tu qu'on aille ensemble, juste nous deux ?",
-    "Qu'est-ce que tu as envie de me raconter qui ne rentre pas dans un message ?",
-    "Quelle petite chose de nos soirées d'avant te manque le plus ?",
-    "Décris le premier câlin que tu veux pour nos retrouvailles.",
-    "Quel repas on cuisinerait ensemble ce soir si j'étais là ?",
-    "Qu'est-ce qui t'a fait sourire aujourd'hui, et à qui avais-tu envie de le dire ?",
-    "Qu'est-ce qui t'a le plus manqué de moi cette semaine ?",
-    "Si on avait une journée entière sans écran ni travail, qu'est-ce qu'on ferait ?",
-    "Quel geste ou quel regard aimerais-tu retrouver tout de suite ?",
-    "Qu'est-ce que tu voudrais qu'on ait prévu pour la prochaine fois qu'on se voit ?"
+    "Quel est le moment précis où tu as compris que c'était différent avec moi ?",
+    "Quelle partie de moi te manque le plus aujourd'hui : ma voix, mon rire, mon regard, autre chose ?",
+    "Décris nos retrouvailles idéales, de la porte qui s'ouvre jusqu'au premier mot.",
+    "Quel petit geste de ma part te fait le plus sentir que tu comptes pour moi ?",
+    "Quel souvenir de nous te revient le plus souvent en ce moment ?",
+    "Où nous imagines-tu dans cinq ans ?",
+    "Qu'est-ce que tu as remarqué chez moi la toute première fois, sans jamais me le dire ?",
+    "Qu'est-ce que tu aimerais que je comprenne mieux de toi ?",
+    "À quoi ressemble ta journée idéale avec moi, du réveil jusqu'au soir ?",
+    "Pour quoi as-tu envie de me dire merci aujourd'hui ?",
+    "Quelle chanson te fait penser à nous, et pourquoi ?",
+    "Qu'est-ce qui, chez moi, te fait fondre à chaque fois ?",
+    "Quel moment nous a le plus rapprochés, selon toi ?",
+    "Quel voyage ou quelle aventure rêves-tu de vivre avec moi ?",
+    "Quel fou rire avec moi te revient en premier ?",
+    "De quoi as-tu peur dans notre histoire, sans en avoir vraiment parlé ?",
+    "Quel geste tendre voudrais-tu recevoir de moi dès qu'on se voit ?",
+    "Qu'est-ce que je t'ai apporté que tu n'avais pas avant moi ?",
+    "Quelle petite chose minuscule te fait penser à moi dans ta journée ?",
+    "Quelle soirée aimerais-tu qu'on passe, rien que nous deux, sans téléphone ?",
+    "Qu'est-ce que tu admires le plus chez moi ?",
+    "Si tu pouvais m'envoyer un seul message vocal ce soir, que dirait-il ?",
+    "Quelle petite habitude à nous deux aimerais-tu créer ?",
+    "Quel moment difficile avons-nous traversé, et qu'est-ce que ça a changé entre nous ?",
+    "Quel moment avec moi aimerais-tu revivre comme si c'était la première fois ?",
+    "Qu'est-ce que tu n'oses pas toujours me demander mais que tu aimerais ?",
+    "Qu'est-ce que tu as appris sur l'amour grâce à nous ?",
+    "Qu'est-ce qui te manque de moi, au-delà de ma présence ?",
+    "Qu'est-ce que tu voudrais que je te promette ?",
+    "Termine cette phrase : « Ce que j'aime le plus dans notre histoire, c'est… »"
   ];
   // ========================
 
