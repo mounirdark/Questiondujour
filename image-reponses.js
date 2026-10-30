@@ -44,14 +44,6 @@
     c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
   }
 
-  // Tes illustrations, affichées telles quelles dans un cadre blanc aux coins arrondis
-  function portrait(c, img, x, y, s) {
-    c.save(); c.shadowColor = 'rgba(0,0,0,.3)'; c.shadowBlur = 12; c.shadowOffsetY = 5;
-    c.fillStyle = '#fff'; rr(c, x - 8, y - 8, s + 16, s + 16, 26); c.fill(); c.restore();
-    c.save(); rr(c, x, y, s, s, 20); c.clip(); c.drawImage(img, x, y, s, s); c.restore();
-    c.lineWidth = 4; c.strokeStyle = CACAO; rr(c, x, y, s, s, 20); c.stroke();
-  }
-
   // Le teckel du porte-clés de la page, recopié tel quel
   async function teckel() {
     try {
@@ -64,7 +56,7 @@
 
   async function dessiner(cv, items) {
     try { await Promise.all([document.fonts.load('600 40px Fraunces'), document.fonts.load('600 30px Karla'), document.fonts.load('400 30px Karla')]); } catch (e) {}
-    const [tk, ...photos] = await Promise.all([teckel(), ...items.map((it) => loadPhoto(norm(it.nom) === norm(PRENOM_LUI) ? 'moi' : 'elle'))]);
+    const tk = await teckel();
     cv.width = W; cv.height = H;
     const c = cv.getContext('2d');
     c.fillStyle = CACAO; c.fillRect(0, 0, W, H);
@@ -86,18 +78,17 @@
 
     const top = 292 + q.lines.length * q.f * 1.3 + 44, gap = 40, bh = (H - 160 - top - gap) / 2, bx = 70, bw = 940;
     items.forEach((it, n) => {
-      const y = top + n * (bh + gap), cy = y + bh / 2, ph = photos[n];
+      const y = top + n * (bh + gap), cy = y + bh / 2;
       c.fillStyle = n ? '#F6D6D9' : CREME; rr(c, bx, y, bw, bh, 16); c.fill();
       c.fillStyle = CACAO; [bx, bx + bw].forEach((x) => { c.beginPath(); c.arc(x, cy, 24, 0, 7); c.fill(); });
-      let tx = bx + 50;
-      if (ph) { const sz = Math.min(170, bh - 60); portrait(c, ph, bx + 46, cy - sz / 2, sz); tx = bx + 46 + sz + 36; }
+      const tx = bx + 50;
       const tw = bx + bw - 46 - tx;
       c.textAlign = 'left'; c.fillStyle = '#C9556A'; c.font = '600 30px ' + FT;
       c.fillText('♥', tx, y + 50);
       c.fillStyle = DISCRET; c.fillText(it.nom, tx + 40, y + 50);
       c.save(); c.setLineDash([2, 9]); c.lineCap = 'round'; c.lineWidth = 3; c.strokeStyle = 'rgba(58,37,25,.35)';
       c.beginPath(); c.moveTo(tx, y + 78); c.lineTo(tx + tw, y + 78); c.stroke(); c.restore();
-      const t = fit(c, it.texte, FT, '400', tw, bh - 120, 40, 24);
+      const t = fit(c, it.texte, FT, '400', tw, bh - 120, 44, 24);
       c.fillStyle = CACAO; c.font = '400 ' + t.f + 'px ' + FT;
       t.lines.forEach((l, j) => c.fillText(l, tx, y + 104 + (j + 0.5) * t.f * 1.3));
       c.textAlign = 'center';
