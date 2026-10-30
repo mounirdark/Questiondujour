@@ -103,11 +103,11 @@
 
   function injecter() {
     const cartes = scene.querySelectorAll('.reponses .carte');
-    if (cartes.length !== 2 || scene.querySelector('#bloc-image')) return;
-    let items = [
-      { nom: moi, texte: cartes[0].querySelector('.texte').textContent },
-      { nom: autre, texte: cartes[1].querySelector('.texte').textContent }
-    ];
+    // Mode aperçu : ajoute &apercu=1 à l'adresse pour tester le bouton avant que l'autre ait répondu
+    const apercu = /[?&]apercu(=|&|$)/.test(location.search);
+    if (scene.querySelector('#bloc-image') || !(cartes.length === 2 || (apercu && cartes.length === 1))) return;
+    const texte = (i) => (cartes[i] ? cartes[i].querySelector('.texte').textContent : 'Ceci est un exemple de réponse, pour voir à quoi ressemblera l’image.');
+    let items = [{ nom: moi, texte: texte(0) }, { nom: autre, texte: texte(1) }];
     if (norm(items[1].nom) === norm(PRENOM_LUI)) items.reverse();
 
     const bloc = document.createElement('div');
@@ -156,9 +156,22 @@
       const base = norm(qui) === norm(PRENOM_LUI) ? 'moi' : 'elle';
       img.onerror = () => { img.onerror = null; img.src = base + '.jpg'; };
       img.src = base + '.png';
-      img.style.cssText = 'width:2.4rem;height:2.4rem;border-radius:50%;object-fit:cover;object-position:50% 35%;' +
-        'vertical-align:middle;margin:0 .5rem 0 0;border:2px solid #fff;box-shadow:0 0 0 1.5px #3A2519';
-      nom.prepend(img);
+      img.style.cssText = 'display:block;width:3.8rem;height:3.8rem;border-radius:50%;object-fit:cover;object-position:50% 35%;' +
+        'border:3px solid #fff;box-shadow:0 0 0 1.5px #3A2519,0 3px 8px rgba(0,0,0,.25)';
+      const box = document.createElement('span');
+      box.style.cssText = 'position:relative;display:inline-block;flex:none;margin:0 .95rem 0 .2rem';
+      box.appendChild(img);
+      // petits cœurs autour de la tête
+      [['top:-.3rem;right:-.6rem;font-size:1.1rem;transform:rotate(14deg)'],
+       ['bottom:.1rem;right:-.85rem;font-size:.7rem;transform:rotate(-10deg)'],
+       ['top:-.5rem;left:-.25rem;font-size:.7rem;transform:rotate(-16deg)']].forEach(([st]) => {
+        const h = document.createElement('span');
+        h.textContent = '♥'; h.setAttribute('aria-hidden', 'true');
+        h.style.cssText = 'position:absolute;line-height:1;color:#D9627A;' + st;
+        box.appendChild(h);
+      });
+      nom.style.display = 'flex'; nom.style.alignItems = 'center';
+      nom.prepend(box);
       if (moiMeme) nom.append(' · ' + moi);
     });
   }
