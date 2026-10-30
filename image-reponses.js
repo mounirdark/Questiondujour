@@ -2,7 +2,7 @@
    Fichiers à placer à côté de index.html : image-reponses.js, moi.jpg, elle.jpg */
 (function () {
   // Ton prénom tel qu'il est enregistré dans Supabase (sans tenir compte des accents ni des majuscules).
-  // Ton illustration est moi.jpg ; celle de Hind, elle.jpg.
+  // Ton illustration est moi.png (ou .jpg) ; celle de Hind, elle.png (ou .jpg).
   const PRENOM_LUI = 'Mounir';
 
   const FQ = 'Fraunces, Georgia, serif', FT = 'Karla, system-ui, sans-serif';
@@ -10,6 +10,8 @@
   const W = 1080, H = 1350;
   const norm = (s) => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
   const loadImg = (u) => new Promise((r) => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = u; });
+  // Cherche d'abord moi.png / elle.png, puis moi.jpg / elle.jpg
+  const loadPhoto = async (base) => (await loadImg(base + '.png')) || (await loadImg(base + '.jpg'));
 
   function wrap(c, text, maxW) {
     const out = [];
@@ -62,7 +64,7 @@
 
   async function dessiner(cv, items) {
     try { await Promise.all([document.fonts.load('600 40px Fraunces'), document.fonts.load('600 30px Karla'), document.fonts.load('400 30px Karla')]); } catch (e) {}
-    const [tk, ...photos] = await Promise.all([teckel(), ...items.map((it) => loadImg(norm(it.nom) === norm(PRENOM_LUI) ? 'moi.jpg' : 'elle.jpg'))]);
+    const [tk, ...photos] = await Promise.all([teckel(), ...items.map((it) => loadPhoto(norm(it.nom) === norm(PRENOM_LUI) ? 'moi' : 'elle'))]);
     cv.width = W; cv.height = H;
     const c = cv.getContext('2d');
     c.fillStyle = CACAO; c.fillRect(0, 0, W, H);
@@ -151,6 +153,26 @@
     });
   }
 
-  new MutationObserver(injecter).observe(scene, { childList: true });
+  // Les têtes à côté des prénoms, sur les tickets de la page
+  function tetes() {
+    scene.querySelectorAll('.reponses .carte, .reponses .scelle').forEach((el) => {
+      const nom = el.querySelector('.nom');
+      if (!nom || nom.querySelector('img.tete')) return;
+      const moiMeme = nom.textContent.indexOf('Ta réponse') === 0;
+      const qui = moiMeme ? moi : autre;
+      const img = new Image();
+      img.className = 'tete'; img.alt = ''; img.setAttribute('aria-hidden', 'true');
+      const base = norm(qui) === norm(PRENOM_LUI) ? 'moi' : 'elle';
+      img.onerror = () => { img.onerror = null; img.src = base + '.jpg'; };
+      img.src = base + '.png';
+      img.style.cssText = 'width:2.4rem;height:2.4rem;border-radius:50%;object-fit:cover;object-position:50% 35%;' +
+        'vertical-align:middle;margin:0 .5rem 0 0;border:2px solid #fff;box-shadow:0 0 0 1.5px #3A2519';
+      nom.prepend(img);
+      if (moiMeme) nom.append(' · ' + moi);
+    });
+  }
+
+  new MutationObserver(() => { tetes(); injecter(); }).observe(scene, { childList: true });
+  tetes();
   injecter();
 })();
