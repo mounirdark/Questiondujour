@@ -85,7 +85,7 @@
       const tw = bx + bw - 46 - tx;
       c.textAlign = 'left'; c.fillStyle = '#C9556A'; c.font = '600 30px ' + FT;
       c.fillText('♥', tx, y + 50);
-      c.fillStyle = DISCRET; c.fillText(it.nom, tx + 40, y + 50);
+      c.fillStyle = DISCRET; c.fillText(it.nom + (heureDe(it.nom) ? ' · ' + heureDe(it.nom) : ''), tx + 40, y + 50);
       c.save(); c.setLineDash([2, 9]); c.lineCap = 'round'; c.lineWidth = 3; c.strokeStyle = 'rgba(58,37,25,.35)';
       c.beginPath(); c.moveTo(tx, y + 78); c.lineTo(tx + tw, y + 78); c.stroke(); c.restore();
       const t = fit(c, it.texte, FT, '400', tw, bh - 120, 44, 24);
@@ -145,38 +145,125 @@
   }
 
   // Les têtes à côté des prénoms, sur les tickets de la page
+  // Tête ronde + petits cœurs devant un prénom
+  function habiller(nom, qui) {
+    const img = new Image();
+    img.className = 'tete'; img.alt = ''; img.setAttribute('aria-hidden', 'true');
+    const base = norm(qui) === norm(PRENOM_LUI) ? 'moi' : 'elle';
+    img.onerror = () => { img.onerror = null; img.src = base + '.jpg'; };
+    img.src = base + '.png';
+    img.style.cssText = 'display:block;width:3.8rem;height:3.8rem;border-radius:50%;object-fit:cover;object-position:50% 35%;' +
+      'border:3px solid #fff;box-shadow:0 0 0 1.5px #3A2519,0 3px 8px rgba(0,0,0,.25)';
+    const box = document.createElement('span');
+    box.style.cssText = 'position:relative;display:inline-block;flex:none;margin:0 .95rem 0 .2rem';
+    box.appendChild(img);
+    // petits cœurs autour de la tête
+    [['top:-.3rem;right:-.6rem;font-size:1.1rem;transform:rotate(14deg)'],
+     ['bottom:.1rem;right:-.85rem;font-size:.7rem;transform:rotate(-10deg)'],
+     ['top:-.5rem;left:-.25rem;font-size:.7rem;transform:rotate(-16deg)']].forEach(([st]) => {
+      const h = document.createElement('span');
+      h.textContent = '♥'; h.setAttribute('aria-hidden', 'true');
+      h.style.cssText = 'position:absolute;line-height:1;color:#D9627A;' + st;
+      box.appendChild(h);
+    });
+    nom.style.display = 'flex'; nom.style.alignItems = 'center';
+    nom.prepend(box);
+  }
+
   function tetes() {
     scene.querySelectorAll('.reponses .carte, .reponses .scelle').forEach((el) => {
       const nom = el.querySelector('.nom');
       if (!nom || nom.querySelector('img.tete')) return;
       const moiMeme = nom.textContent.indexOf('Ta réponse') === 0;
       const qui = moiMeme ? moi : autre;
-      const img = new Image();
-      img.className = 'tete'; img.alt = ''; img.setAttribute('aria-hidden', 'true');
-      const base = norm(qui) === norm(PRENOM_LUI) ? 'moi' : 'elle';
-      img.onerror = () => { img.onerror = null; img.src = base + '.jpg'; };
-      img.src = base + '.png';
-      img.style.cssText = 'display:block;width:3.8rem;height:3.8rem;border-radius:50%;object-fit:cover;object-position:50% 35%;' +
-        'border:3px solid #fff;box-shadow:0 0 0 1.5px #3A2519,0 3px 8px rgba(0,0,0,.25)';
-      const box = document.createElement('span');
-      box.style.cssText = 'position:relative;display:inline-block;flex:none;margin:0 .95rem 0 .2rem';
-      box.appendChild(img);
-      // petits cœurs autour de la tête
-      [['top:-.3rem;right:-.6rem;font-size:1.1rem;transform:rotate(14deg)'],
-       ['bottom:.1rem;right:-.85rem;font-size:.7rem;transform:rotate(-10deg)'],
-       ['top:-.5rem;left:-.25rem;font-size:.7rem;transform:rotate(-16deg)']].forEach(([st]) => {
-        const h = document.createElement('span');
-        h.textContent = '♥'; h.setAttribute('aria-hidden', 'true');
-        h.style.cssText = 'position:absolute;line-height:1;color:#D9627A;' + st;
-        box.appendChild(h);
-      });
-      nom.style.display = 'flex'; nom.style.alignItems = 'center';
-      nom.prepend(box);
+      nom.dataset.qui = qui;
+      habiller(nom, qui);
       if (moiMeme) nom.append(' · ' + moi);
     });
   }
 
-  new MutationObserver(() => { tetes(); injecter(); }).observe(scene, { childList: true });
+  // Heure à laquelle chaque réponse a été postée (si la fonction `voir` de Supabase renvoie une date)
+  let heureEnCours = false;
+  const heureDe = (nom) => {
+    const n = [...scene.querySelectorAll('.reponses .carte .nom')].find((x) => x.dataset.qui === nom);
+    return n && n.dataset.h ? n.dataset.h : '';
+  };
+  async function heures() {
+    if (heureEnCours || typeof client === 'undefined' || !client) return;
+    const noms = [...scene.querySelectorAll('.reponses .carte .nom')].filter((n) => n.dataset.qui && !n.dataset.heure);
+    if (!noms.length) return;
+    heureEnCours = true;
+    try {
+      const { data } = await client.rpc('voir', { p_code: code, p_jour: jour });
+      noms.forEach((n) => {
+        n.dataset.heure = '1';
+        const row = (data || []).find((l) => l.prenom === n.dataset.qui);
+        const cle = row && Object.keys(row).find((k) => typeof row[k] === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(row[k]));
+        if (!cle) return;
+        const h = 'à ' + new Date(row[cle]).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        n.dataset.h = h;
+        n.append(' · ' + h);
+      });
+    } catch (e) {}
+    heureEnCours = false;
+  }
+
+  // Historique : toutes les questions passées, avec les deux réponses, les têtes et les prénoms
+  const dateCle = (row) => row && Object.keys(row).find((k) => typeof row[k] === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(row[k]));
+  function historique() {
+    if (document.getElementById('bloc-hist') || !moi || !code || typeof client === 'undefined' || !client) return;
+    const bloc = document.createElement('div');
+    bloc.id = 'bloc-hist'; bloc.style.marginTop = '2rem';
+    const bouton = el('button', null, 'Historique');
+    bouton.setAttribute('aria-expanded', 'false');
+    const sortie = el('div'); sortie.hidden = true; sortie.style.marginTop = '1.75rem';
+    bloc.append(bouton, sortie);
+    scene.after(bloc);
+    let charge = false;
+    bouton.addEventListener('click', async () => {
+      if (bouton.getAttribute('aria-expanded') === 'true') {
+        sortie.hidden = true; bouton.setAttribute('aria-expanded', 'false'); bouton.textContent = 'Historique'; return;
+      }
+      sortie.hidden = false; bouton.setAttribute('aria-expanded', 'true'); bouton.textContent = 'Masquer l’historique';
+      if (charge) return;
+      charge = true;
+      sortie.replaceChildren(el('p', 'note', 'Chargement…'));
+      const n = QUESTIONS.length, lui = norm(PRENOM_LUI), jours = [];
+      for (let k = 1; k <= Math.min(decalage, 60); k++) { const d = new Date(aujourdhui); d.setDate(d.getDate() - k); jours.push({ k, d }); }
+      const res = await Promise.all(jours.map(async ({ k, d }) => {
+        try {
+          const { data, error } = await client.rpc('voir', { p_code: code, p_jour: d.toLocaleDateString('en-CA') });
+          return { k, d, data: error ? null : data };
+        } catch (e) { return { k, d, data: null }; }
+      }));
+      sortie.replaceChildren();
+      let nb = 0;
+      res.forEach(({ k, d, data }) => {
+        if (!data || !data.some((l) => l.revele)) return;
+        nb++;
+        const jourEl = el('section'); jourEl.style.marginBottom = '2.5rem';
+        jourEl.append(el('p', 'date', d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })));
+        const q = el('h2', null, QUESTIONS[(((decalage - k) % n) + n) % n]);
+        q.style.cssText = 'font-family:Fraunces,Georgia,serif;font-weight:600;font-size:1.3rem;line-height:1.3;margin:0 0 1.1rem';
+        jourEl.append(q);
+        const rep = el('div', 'reponses');
+        [...data].sort((a, b) => (norm(b.prenom) === lui) - (norm(a.prenom) === lui)).forEach((row, i) => {
+          const cle = dateCle(row);
+          const h = cle ? ' · à ' + new Date(row[cle]).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
+          const c = carte(i ? 'carte autre' : 'carte', row.prenom + h, row.texte);
+          habiller(c.querySelector('.nom'), row.prenom);
+          rep.append(c);
+        });
+        jourEl.append(rep);
+        sortie.append(jourEl);
+      });
+      if (!nb) sortie.append(el('p', 'note', 'Pas encore de réponses à afficher : l’historique se remplit dès le lendemain de la première question.'));
+    });
+  }
+
+  new MutationObserver(() => { tetes(); injecter(); heures(); historique(); }).observe(scene, { childList: true });
   tetes();
   injecter();
+  heures();
+  historique();
 })();
